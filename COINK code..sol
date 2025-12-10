@@ -7,7 +7,6 @@ pragma solidity ^0.8.29;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract COINKtoken is ERC20 {
-    IERC20 public euroToken;
     string public version = "1.0";
     uint256 public constant supply = 22_779_888_555_337_777 * 10 ** 18;
 
