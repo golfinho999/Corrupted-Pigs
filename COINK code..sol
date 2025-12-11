@@ -26,8 +26,8 @@ contract COINKtoken is ERC20 {
         uint256 withdrawn;
         uint256 lockTimestamp; // initialLock
         uint256 withdrawPerPeriod;
-        string comment;
     }
+    //string comment;
 
     // map wallet address to tokenLock details
     mapping(address => TokenLockInfo) public tokenLock;
@@ -74,6 +74,9 @@ contract COINKtoken is ERC20 {
         address indexed newAddress
     );
 
+    //--------------------------
+    // Events
+
     event WhitelistAdded(address indexed account, uint256 amount);
     event WhitelistClaimed(address indexed account, uint256 amount);
 
@@ -83,13 +86,12 @@ contract COINKtoken is ERC20 {
     event SocialWhitelistClaimed(address indexed account, uint256 amount);
 
     event ReserveFundWithdrawn(address indexed to, uint256 amount);
-
-    event OtherAllocationWithdrawn(address indexed to, uint256 amount);
+    event TransferFromReserve(address indexed to, uint256 amount);
 
     event BurnCoink(address indexed account, uint256 amount);
 
     // constructor
-    constructor() ERC20("CORRUPTED PIGS", "COINK") {
+    constructor() ERC20("COINK", "COINK") {
         owner = msg.sender;
         UBQaddress = msg.sender;
         WhitelistManager = msg.sender;
@@ -102,7 +104,7 @@ contract COINKtoken is ERC20 {
         reserveFirstReleaseTimestamp = startTimestamp + (48 * releaseInterval); // 48 months
 
         _mint(address(this), supply);
-        emit MintCOINK(msg.sender, supply);
+        emit MintCOINK(address(this), supply);
 
         uint256 sum;
         sum = 0;
@@ -186,9 +188,9 @@ contract COINKtoken is ERC20 {
 
         // lista dos founders no construtor Endereços de carteiras aqui!
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
-        founders[1] = address(0x00000000000002343424);
-        founders[2] = address(0x00000000000002343424);
-        founders[3] = address(0x00000000000002343424);
+        founders[1] = address(0xf188b8cc0b42A485258439f93A55C4a7830814AD);
+        founders[2] = address(0x3D827e480169f3e8b65d3c60c827000BDf313CF8);
+        founders[3] = address(0xbB5A837Cf343b71635207810A6A63e1F37d0E569);
         founders[4] = address(0x00000000000002343424);
     }
 
@@ -213,6 +215,9 @@ contract COINKtoken is ERC20 {
         _;
     }
 
+    //---------------------------
+    // AIRDROP
+
     // Adiciona endereco na whitelist com um valor a levantar (inteiro, sem partes)
     // Debita automaticamente uma reserva que tenha saldo suficiente
     function addWhitelist(
@@ -221,7 +226,7 @@ contract COINKtoken is ERC20 {
     ) external onlyWhitelistManager {
         require(account != address(0), "account is zero");
         require(amount > 0, "amount is zero");
-        require(whitelist[account] == 0, "already whitelisted");
+        require(whitelist[account] != amount, "possible duplicated airdrop");
 
         // Escolhe a primeira reserva com saldo suficiente
         require(
@@ -239,7 +244,7 @@ contract COINKtoken is ERC20 {
         totalReserved -= amount;
         totalWhitelisted += amount;
 
-        whitelist[account] = amount;
+        whitelist[account] += amount;
         emit WhitelistAdded(account, amount);
     }
 
@@ -256,16 +261,21 @@ contract COINKtoken is ERC20 {
         emit WhitelistClaimed(msg.sender, amount);
     }
 
+    //----------------------------------------
+    // admin functions
+
     // only owner can replace wallet address of UBQ team
     function setNewUBQwallet(address newUBQaddress) external onlyOwner {
         require(newUBQaddress != address(0), "new address is the zero address");
-        emit NewUBQwallet(UBQaddress, newUBQaddress);
+        require(newUBQaddress != UBQaddress, "Same wallet");
         UBQaddress = newUBQaddress;
+        emit NewUBQwallet(UBQaddress, newUBQaddress);
     }
 
     // only UBQ can replace wallet address of WhiteListManager
     function setNewWhitelistManagerWallet(address newAddress) external onlyUBQ {
         require(newAddress != address(0), "new address is the zero address");
+        require(newAddress != WhitelistManager, "Same wallet");
         emit NewWhitelistManagerWallet(WhitelistManager, newAddress);
         WhitelistManager = newAddress;
     }
@@ -282,11 +292,6 @@ contract COINKtoken is ERC20 {
     function POLbalance() public view returns (uint256) {
         return address(this).balance;
     }
-
-    /*
-    function COINKtotalSupply() public view returns (uint256) {
-        return totalSupply();
-    }*/
 
     // ---------- Founders ----------
 
@@ -320,7 +325,7 @@ contract COINKtoken is ERC20 {
         }
     }
 
-    // ?claim? com cliff de 24 meses e vesting mensal por 24 meses (total 48).
+    // Claim com cliff de 24 meses e vesting mensal por 24 meses (total 48).
     // permite ao founder levantar o acumulado do que já venceu, caso tenha ficado meses sem levantar.
 
     function claimFounderVested() external {
@@ -365,6 +370,7 @@ contract COINKtoken is ERC20 {
     }
 
     //----------------------------
+    // Social Project
 
     // Função para o owner adicionar endereços na SocialWhitelist (debita a reserva 1):
     function addSocialWhitelist(
@@ -455,8 +461,7 @@ contract COINKtoken is ERC20 {
 
         // Transfere tokens do contrato para o destinatario
         _transfer(address(this), to, amount);
-
-        emit OtherAllocationWithdrawn(to, amount);
+        emit TransferFromReserve(to, amount);
     }
 
     //--------------------------------
@@ -515,14 +520,12 @@ contract COINKtoken is ERC20 {
         require(ok, "native transfer failed");
     }
 
-    //------------------
+    //------------------------
     // Porco Assado?
     function burnCoink(uint256 reserveId, uint256 amount) external onlyUBQ {
         require(reserveId < RESERVES_COUNT, "invalid reserve id");
         require(reserveId != FOUNDERS_RESERVE_ID, "invalid reserve id"); // founders have special rules
         require(reserveId != SOCIAL_RESERVE_ID, "invalid reserve id"); // Social Project have special rules
-        // require(reserveId != AIRDROP_RESERVE_ID, "invalid reserve id"); // Community Airdrop have special rules
-        // require(reserveId != RESERVE_FUND_ID, "invalid reserve id"); // Reserve Fund have special rules
         require(amount > 0, "amount is zero");
         require(reserves[reserveId].amount >= amount, "insufficient reserve");
 
@@ -531,8 +534,8 @@ contract COINKtoken is ERC20 {
         totalReserved -= amount;
 
         // Burn the COINK // porco assado?
-        _burn(msg.sender, amount);
+        _burn(address(this), amount);
 
-        emit BurnCoink(msg.sender, amount);
+        emit BurnCoink(address(this), amount);
     }
 }
