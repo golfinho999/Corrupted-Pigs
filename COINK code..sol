@@ -3,6 +3,7 @@
 
 pragma solidity ^0.8.31;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract COINKtoken is ERC20 {
@@ -255,23 +256,6 @@ contract COINKtoken is ERC20 {
         emit WhitelistClaimed(msg.sender, amount);
     }
 
-    // Função receive para rejeitar qualquer envio de POL diretamente para o contrato
-    receive() external payable {
-        revert("sending POL to the contract is not allowed");
-    }
-
-    // Função fallback como segurança adicional para lidar com chamadas não esperadas
-    // evitamos receber outros token ERC20 neste contrato
-    // apenas a função Exchange deve funcionar
-    fallback() external payable {
-        revert("the call is not allowed");
-    }
-
-    function renounceOwnership() public onlyOwner {
-        // works only once!
-        owner = address(0);
-    }
-
     // only owner can replace wallet address of UBQ team
     function setNewUBQwallet(address newUBQaddress) external onlyOwner {
         require(newUBQaddress != address(0), "new address is the zero address");
@@ -284,6 +268,11 @@ contract COINKtoken is ERC20 {
         require(newAddress != address(0), "new address is the zero address");
         emit NewWhitelistManagerWallet(WhitelistManager, newAddress);
         WhitelistManager = newAddress;
+    }
+
+    function renounceOwnership() public onlyOwner {
+        // works only once!
+        owner = address(0);
     }
 
     function COINKbalance() public view returns (uint256) {
@@ -492,6 +481,40 @@ contract COINKtoken is ERC20 {
         _transfer(address(this), msg.sender, excess);
     }
 
+    // Função receive para rejeitar qualquer envio de POL diretamente para o contrato
+    receive() external payable {
+        revert("sending POL to the contract is not allowed");
+    }
+
+    // Função fallback como segurança adicional para lidar com chamadas não esperadas
+    // evitamos receber POL neste contrato
+    fallback() external payable {
+        revert("the call is not allowed");
+    }
+
+    function releaseERC20Tokens(address _tokenId) public onlyUBQ {
+        // avoid stuck tokens in the contract
+
+        require(address(this) != _tokenId, "only other Tokens!");
+
+        IERC20 anyTokenContract = IERC20(_tokenId);
+        uint256 balance = anyTokenContract.balanceOf(address(this));
+
+        require(balance > 0, "balance is zero");
+
+        anyTokenContract.transfer(msg.sender, balance);
+    }
+
+    function releasePOL() public onlyUBQ {
+        // avoid stuck POL in the contract
+
+        uint256 balance = address(this).balance;
+        require(balance > 0, "balance is zero");
+
+        (bool ok, ) = msg.sender.call{value: balance}("");
+        require(ok, "native transfer failed");
+    }
+
     //------------------
     // Porco Assado?
     function burnCoink(uint256 reserveId, uint256 amount) external onlyUBQ {
@@ -508,7 +531,6 @@ contract COINKtoken is ERC20 {
         totalReserved -= amount;
 
         // Burn the COINK // porco assado?
-
         _burn(msg.sender, amount);
 
         emit BurnCoink(msg.sender, amount);
