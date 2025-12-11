@@ -183,8 +183,9 @@ contract COINKtoken is ERC20 {
         );
 
         totalReserved = sum; // inicialmente igual ao balance, mas pode haver depositos no contracto que alterem isto
-        totalWhitelisted = 0;
         totalFoundersLocked = 0;
+        totalSocialWhitelisted = 0;
+        totalWhitelisted = 0;
 
         // lista dos founders no construtor Endereços de carteiras aqui!
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
