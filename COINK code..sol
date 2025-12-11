@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 // COINK Token
 
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.31;
 
-//import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract COINKtoken is ERC20 {
@@ -63,7 +62,7 @@ contract COINKtoken is ERC20 {
 
     // events
     event MintCOINK(address indexed _wallet, uint256 _value);
-    //  event BurnUBQ(address indexed _wallet, uint256 _value);
+
     event NewUBQwallet(
         address indexed previousAddress,
         address indexed newAddress
@@ -86,7 +85,7 @@ contract COINKtoken is ERC20 {
 
     event OtherAllocationWithdrawn(address indexed to, uint256 amount);
 
-    event Burn(uint256 amount);
+    event BurnCoink(address indexed account, uint256 amount);
 
     // constructor
     constructor() ERC20("CORRUPTED PIGS", "COINK") {
@@ -363,6 +362,21 @@ contract COINKtoken is ERC20 {
         emit FounderClaim(msg.sender, claimable);
     }
 
+    // get info about Lock befere UnLock
+
+    function getLockInfo(
+        address account
+    ) public view returns (uint256 lockedBalance, uint256 lockedTime) {
+        if (tokenLock[account].totalLockedAmount == 0) return (0, 0);
+
+        lockedTime = block.timestamp - tokenLock[account].lockTimestamp;
+        lockedBalance = tokenLock[account].balance;
+
+        return (lockedBalance, lockedTime);
+    }
+
+    //----------------------------
+
     // Função para o owner adicionar endereços na SocialWhitelist (debita a reserva 1):
     function addSocialWhitelist(
         address account,
@@ -480,7 +494,7 @@ contract COINKtoken is ERC20 {
 
     //------------------
     // Porco Assado?
-    function Burn(uint256 reserveId, uint256 amount) external onlyUBQ {
+    function burnCoink(uint256 reserveId, uint256 amount) external onlyUBQ {
         require(reserveId < RESERVES_COUNT, "invalid reserve id");
         require(reserveId != FOUNDERS_RESERVE_ID, "invalid reserve id"); // founders have special rules
         require(reserveId != SOCIAL_RESERVE_ID, "invalid reserve id"); // Social Project have special rules
@@ -497,6 +511,6 @@ contract COINKtoken is ERC20 {
 
         _burn(msg.sender, amount);
 
-        emit Burn(amount);
+        emit BurnCoink(msg.sender, amount);
     }
 }
