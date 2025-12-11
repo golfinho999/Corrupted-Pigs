@@ -190,15 +190,9 @@ contract COINKtoken is ERC20 {
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
         founders[1] = address(0xf188b8cc0b42A485258439f93A55C4a7830814AD);
         founders[2] = address(0x3D827e480169f3e8b65d3c60c827000BDf313CF8);
-        founders[3] = address(0xbB5A837Cf343b71635207810A6A63e1F37d0E569);
+        founders[3] = address(0xFa5B71ad62964578DA4fA2EAca5b71082516b97B);
         founders[4] = address(0x00000000000002343424);
     }
-
-    /*
-    function decimals() public view virtual override returns (uint8) {
-        return 18;
-    }
-*/
 
     modifier onlyOwner() {
         require(msg.sender == owner, "not allowed");
