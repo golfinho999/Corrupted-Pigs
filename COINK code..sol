@@ -190,9 +190,9 @@ contract COINKtoken is ERC20 {
         // lista dos founders no construtor Endereços de carteiras aqui!
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
         founders[1] = address(0xf188b8cc0b42A485258439f93A55C4a7830814AD);
-        founders[2] = address(0x3D827e480169f3e8b65d3c60c827000BDf313CF8);
+        founders[2] = address(0x39FA95dDfF5C09DCC2927ef8ECA9f00AECb42AED);
         founders[3] = address(0xFa5B71ad62964578DA4fA2EAca5b71082516b97B);
-        founders[4] = address(0x00000000000002343424);
+        founders[4] = address(0xF695b96bC6F7eD94aEd344D4354Ab7e4A27E042B);
     }
 
     modifier onlyOwner() {
@@ -212,6 +212,8 @@ contract COINKtoken is ERC20 {
 
     //---------------------------
     // AIRDROP
+
+    // simplificar com função de transferencia directa do airdrop atribuido na hora!
 
     // Adiciona endereco na whitelist com um valor a levantar (inteiro, sem partes)
     // Debita automaticamente uma reserva que tenha saldo suficiente
