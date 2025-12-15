@@ -12,7 +12,7 @@ contract COINKtoken is ERC20 {
 
     address public owner;
     address public UBQaddress;
-    address public WhitelistManager;
+    address public AirDropManager;
 
     uint256 private startTimestamp;
     uint256 private releaseInterval;
@@ -51,8 +51,6 @@ contract COINKtoken is ERC20 {
     uint256 public totalSocialWhitelisted; // total bloqueado na social whitelist
 
     uint8 internal constant AIRDROP_RESERVE_ID = 2;
-    mapping(address => uint256) public whitelist;
-    uint256 public totalWhitelisted;
 
     address[] private founders;
     mapping(address => uint256) public founderAllocation; // saldo inicial (total alocado)
@@ -69,7 +67,7 @@ contract COINKtoken is ERC20 {
         address indexed newAddress
     );
 
-    event NewWhitelistManagerWallet(
+    event NewAirDropManager(
         address indexed previousAddress,
         address indexed newAddress
     );
@@ -77,8 +75,7 @@ contract COINKtoken is ERC20 {
     //--------------------------
     // Events
 
-    event WhitelistAdded(address indexed account, uint256 amount);
-    event WhitelistClaimed(address indexed account, uint256 amount);
+    event AirDropSended(address indexed account, uint256 amount);
 
     event FounderClaim(address indexed founder, uint256 amount);
 
@@ -94,7 +91,7 @@ contract COINKtoken is ERC20 {
     constructor() ERC20("COINK", "COINK") {
         owner = msg.sender;
         UBQaddress = msg.sender;
-        WhitelistManager = msg.sender;
+        AirDropManager = msg.sender;
 
         startTimestamp = block.timestamp; // now
 
@@ -185,7 +182,6 @@ contract COINKtoken is ERC20 {
         totalReserved = sum; // inicialmente igual ao balance, mas pode haver depositos no contracto que alterem isto
         totalFoundersLocked = 0;
         totalSocialWhitelisted = 0;
-        totalWhitelisted = 0;
 
         // lista dos founders no construtor Endereços de carteiras aqui!
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
@@ -205,8 +201,8 @@ contract COINKtoken is ERC20 {
         _;
     }
 
-    modifier onlyWhitelistManager() {
-        require(msg.sender == WhitelistManager, "not allowed");
+    modifier onlyAirDropManager() {
+        require(msg.sender == AirDropManager, "not allowed");
         _;
     }
 
@@ -217,19 +213,15 @@ contract COINKtoken is ERC20 {
 
     // Adiciona endereco na whitelist com um valor a levantar (inteiro, sem partes)
     // Debita automaticamente uma reserva que tenha saldo suficiente
-    function addWhitelist(
+    function sendAirDrop(
         address account,
         uint256 amount
-    ) external onlyWhitelistManager {
+    ) external onlyAirDropManager {
         require(account != address(0), "account is zero");
         require(amount > 0, "amount is zero");
-        require(whitelist[account] != amount, "possible duplicated airdrop");
 
         // Escolhe a primeira reserva com saldo suficiente
-        require(
-            amount < 1_000_000 * 10 ** 18,
-            "don't abuse the power of COINK"
-        );
+        require(amount < 500_000 * 10 ** 18, "don't abuse the power of COINK");
 
         require(
             reserves[AIRDROP_RESERVE_ID].amount >= amount,
@@ -239,23 +231,9 @@ contract COINKtoken is ERC20 {
         // Move da reserva para a whitelist (continua dentro do contrato)
         reserves[AIRDROP_RESERVE_ID].amount -= amount;
         totalReserved -= amount;
-        totalWhitelisted += amount;
 
-        whitelist[account] += amount;
-        emit WhitelistAdded(account, amount);
-    }
-
-    // Levantamento: o utilizador retira todo o valor autorizado e fica impedido de novo levantamento
-    function claimWhitelist() external {
-        uint256 amount = whitelist[msg.sender];
-        require(amount > 0, "nothing to claim");
-
-        // clear before transfer
-        whitelist[msg.sender] = 0;
-        totalWhitelisted -= amount;
-
-        _transfer(address(this), msg.sender, amount);
-        emit WhitelistClaimed(msg.sender, amount);
+        _transfer(address(this), account, amount);
+        emit AirDropSended(AirDropManager, amount);
     }
 
     //----------------------------------------
@@ -270,11 +248,11 @@ contract COINKtoken is ERC20 {
     }
 
     // only UBQ can replace wallet address of WhiteListManager
-    function setNewWhitelistManagerWallet(address newAddress) external onlyUBQ {
+    function setNewAirDropManager(address newAddress) external onlyUBQ {
         require(newAddress != address(0), "new address is the zero address");
-        require(newAddress != WhitelistManager, "Same wallet");
-        emit NewWhitelistManagerWallet(WhitelistManager, newAddress);
-        WhitelistManager = newAddress;
+        require(newAddress != AirDropManager, "Same wallet");
+        emit NewAirDropManager(AirDropManager, newAddress);
+        AirDropManager = newAddress;
     }
 
     function renounceOwnership() public onlyOwner {
@@ -468,7 +446,6 @@ contract COINKtoken is ERC20 {
     function excessBalance() public view returns (uint256) {
         uint256 bal = balanceOf(address(this));
         uint256 locked = totalReserved +
-            totalWhitelisted +
             totalFoundersLocked +
             totalSocialWhitelisted;
 
@@ -518,7 +495,7 @@ contract COINKtoken is ERC20 {
     }
 
     //------------------------
-    // Porco Assado?
+    // Porco Assado
     function burnCoink(uint256 reserveId, uint256 amount) external onlyUBQ {
         require(reserveId < RESERVES_COUNT, "invalid reserve id");
         require(reserveId != FOUNDERS_RESERVE_ID, "invalid reserve id"); // founders have special rules
@@ -530,7 +507,7 @@ contract COINKtoken is ERC20 {
         reserves[reserveId].amount -= amount;
         totalReserved -= amount;
 
-        // Burn the COINK // porco assado?
+        // Burn the COINK /
         _burn(address(this), amount);
 
         emit BurnCoink(address(this), amount);
