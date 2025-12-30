@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
-// COINK Token
+// ðŸ·ðŸ’° COINK Token ðŸ’Ž â€“ The memecoin for reflective and mischievous pigs
+// May your wallets be full, your snouts shiny, and your airdrops always muddy
 
 pragma solidity ^0.8.31;
 
@@ -7,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract COINKtoken is ERC20 {
-    string public version = "1.0";
+    string public version = "1.0 (Stylized)";
     uint256 public constant supply = 22_779_888_555_337_777 * 10 ** 18;
 
     address public owner;
@@ -24,18 +25,17 @@ contract COINKtoken is ERC20 {
         uint256 totalLockedAmount;
         uint256 balance;
         uint256 withdrawn;
-        uint256 lockTimestamp; // initialLock
+        uint256 lockTimestamp; // InitialLock
         uint256 withdrawPerPeriod;
     }
-    //string comment;
 
-    // map wallet address to tokenLock details
+    // Map wallet address to tokenLock details
     mapping(address => TokenLockInfo) public tokenLock;
 
-    // Número fixo de reservas
+    // Fixed number of reservations
     uint8 public constant RESERVES_COUNT = 12;
 
-    // Estrutura da reserva
+    // Structure of the reserve
     struct Reserve {
         string name;
         uint256 amount;
@@ -47,19 +47,19 @@ contract COINKtoken is ERC20 {
     uint8 internal constant FOUNDERS_RESERVE_ID = 0;
 
     uint8 internal constant SOCIAL_RESERVE_ID = 1;
-    mapping(address => uint256) public socialWhitelist; // valor que cada endereço pode levantar
-    uint256 public totalSocialWhitelisted; // total bloqueado na social whitelist
+    mapping(address => uint256) public socialWhitelist; // Amount that each address can withdraw
+    uint256 public totalSocialWhitelisted; // Total locked in the Social Projects Whitelist
 
     uint8 internal constant AIRDROP_RESERVE_ID = 2;
 
     address[] private founders;
-    mapping(address => uint256) public founderAllocation; // saldo inicial (total alocado)
-    mapping(address => uint256) public founderClaimed; // já levantado
+    mapping(address => uint256) public founderAllocation; // Initial balance (total allocated)
+    mapping(address => uint256) public founderClaimed; // Already withdrawn
     uint256 public totalFoundersLocked;
 
     uint8 internal constant RESERVE_FUND_ID = 7;
 
-    // events
+    // Events
     event MintCOINK(address indexed _wallet, uint256 _value);
 
     event NewUBQwallet(
@@ -87,13 +87,13 @@ contract COINKtoken is ERC20 {
 
     event BurnCoink(address indexed account, uint256 amount);
 
-    // constructor
+    // Constructor
     constructor() ERC20("COINK", "COINK") {
         owner = msg.sender;
         UBQaddress = msg.sender;
         AirDropManager = msg.sender;
 
-        startTimestamp = block.timestamp; // now
+        startTimestamp = block.timestamp; // Now
 
         releaseInterval = 30 * (24 * 60 * 60); // 30 days
         socialReleaseTimestamp = startTimestamp + (12 * releaseInterval); // 12 months
@@ -173,17 +173,17 @@ contract COINKtoken is ERC20 {
         reserves[11] = Reserve({name: "Retail", amount: reserveValue});
         sum += reserveValue;
 
-        // Garante que a distribuicao bate com o saldo que o contrato detem
+        // Ensures that the distribution matches the balance held by the contract
         require(
             sum == balanceOf(address(this)),
-            "sum is not equal to contract token balance"
+            "Pride falters: the ledger does not align"
         );
 
-        totalReserved = sum; // inicialmente igual ao balance, mas pode haver depositos no contracto que alterem isto
+        totalReserved = sum; // Initially equal to the balance, but there may be deposits in the contract that change this
         totalFoundersLocked = 0;
         totalSocialWhitelisted = 0;
 
-        // lista dos founders no construtor Endereços de carteiras aqui!
+        // List of founders in the builder Wallet addresses here!
         founders[0] = address(0x09167858b2D2D69694355E7a6082345E1B3b565C);
         founders[1] = address(0xf188b8cc0b42A485258439f93A55C4a7830814AD);
         founders[2] = address(0x39FA95dDfF5C09DCC2927ef8ECA9f00AECb42AED);
@@ -192,43 +192,41 @@ contract COINKtoken is ERC20 {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "not allowed");
+        require(msg.sender == owner, "Equity denies meddling with consecrated coffers");
         _;
     }
 
     modifier onlyUBQ() {
-        require(msg.sender == UBQaddress, "not allowed");
+        require(msg.sender == UBQaddress, "Integrity preserves what is consecrated");
         _;
     }
 
     modifier onlyAirDropManager() {
-        require(msg.sender == AirDropManager, "not allowed");
+        require(msg.sender == AirDropManager, "Prudence prevents interference in this task");
         _;
     }
 
     //---------------------------
     // AIRDROP
 
-    // simplificar com função de transferencia directa do airdrop atribuido na hora!
-
-    // Adiciona endereco na whitelist com um valor a levantar (inteiro, sem partes)
-    // Debita automaticamente uma reserva que tenha saldo suficiente
+    // Adds an address to the whitelist with an amount to withdraw (integer, no fractions)
+    // Automatically debits a reservation that has sufficient balance
     function sendAirDrop(
         address account,
         uint256 amount
     ) external onlyAirDropManager {
-        require(account != address(0), "account is zero");
-        require(amount > 0, "amount is zero");
+        require(account != address(0), "Providence does not endow the emptiness");
+        require(amount > 0, "Lust for COINK comes to naught");
 
-        // Escolhe a primeira reserva com saldo suficiente
-        require(amount < 500_000 * 10 ** 18, "don't abuse the power of COINK");
+        // Selects the first reservation with sufficient balance
+        require(amount < 500_000 * 10 ** 18, "Greed recoils when desire exceeds reason");
 
         require(
             reserves[AIRDROP_RESERVE_ID].amount >= amount,
-            "no reserve with enough funds"
+            "Detachment accepts that nothing remains to receive"
         );
 
-        // Move da reserva para a whitelist (continua dentro do contrato)
+        // Moves from the reservation to the whitelist (remains within the contract)
         reserves[AIRDROP_RESERVE_ID].amount -= amount;
         totalReserved -= amount;
 
@@ -237,26 +235,26 @@ contract COINKtoken is ERC20 {
     }
 
     //----------------------------------------
-    // admin functions
+    // Admin functions
 
-    // only owner can replace wallet address of UBQ team
+    // Only owner can replace wallet address of UBQ team
     function setNewUBQwallet(address newUBQaddress) external onlyOwner {
-        require(newUBQaddress != address(0), "new address is the zero address");
-        require(newUBQaddress != UBQaddress, "Same wallet");
+        require(newUBQaddress != address(0), "Guidance cannot emerge from shadows; choose a living soul");
+        require(newUBQaddress != UBQaddress, "Reverence acknowledges this path was already taken");
         UBQaddress = newUBQaddress;
         emit NewUBQwallet(UBQaddress, newUBQaddress);
     }
 
-    // only UBQ can replace wallet address of WhiteListManager
+    // Only UBQ can replace wallet address of WhiteListManager
     function setNewAirDropManager(address newAddress) external onlyUBQ {
-        require(newAddress != address(0), "new address is the zero address");
-        require(newAddress != AirDropManager, "Same wallet");
+        require(newAddress != address(0), "Faith begins before the eyes perceive");
+        require(newAddress != AirDropManager, "Patience: the role is already in place");
         emit NewAirDropManager(AirDropManager, newAddress);
         AirDropManager = newAddress;
     }
 
     function renounceOwnership() public onlyOwner {
-        // works only once!
+        // Works only once!
         owner = address(0);
     }
 
@@ -270,21 +268,21 @@ contract COINKtoken is ERC20 {
 
     // ---------- Founders ----------
 
-    // Consulta a lista de founders
+    // Checks the list of founders
     function getFounders() external view returns (address[] memory) {
         return founders;
     }
 
-    // Distribui a totalidade da reserva id 0 de forma equitativa entre os founders
-    // Usa divisao inteira: todos recebem 'base', e os primeiros 'remainder' recebem +1 unidade
-    // so pode ser usado uma vez
+    // Distributes the entirety of reservation ID 0 equally among the founders
+    // Uses integer division: everyone receives 'base', and the first 'remainder' receive +1 unit
+    // Can only be used once
     function distributeToFounders() external onlyOwner {
         uint256 n = founders.length;
-        require(n > 0, "no founders");
+        require(n > 0, "The wise never cease to learn");
         uint256 total = reserves[FOUNDERS_RESERVE_ID].amount;
-        require(total > 0, "Founders reserve empty");
+        require(total > 0, "Wrath finds no fuel in an empty trough");
 
-        // zera a reserva 0 e atualiza totalReserved
+        // Zeros out Reserve 0 and updates totalReserved
         reserves[FOUNDERS_RESERVE_ID].amount = 0;
         totalReserved -= total;
         totalFoundersLocked = total;
@@ -300,30 +298,30 @@ contract COINKtoken is ERC20 {
         }
     }
 
-    // Claim com cliff de 24 meses e vesting mensal por 24 meses (total 48).
-    // permite ao founder levantar o acumulado do que já venceu, caso tenha ficado meses sem levantar.
+    // Claim with a 24-month cliff and monthly vesting over 24 months (total 48)
+    // Allows the founder to withdraw the accumulated amount that has already vested, in case they havenâ€™t withdrawn for several months
 
     function claimFounderVested() external {
         uint256 allocation = founderAllocation[msg.sender];
-        require(allocation > 0, "no allocation");
+        require(allocation > 0, "Discernment reveals no seed was ever planted");
         require(
             block.timestamp >= foundersFirstReleaseTimestamp,
-            "cliff not over"
+            "Stewardship releases only what has ripened"
         );
 
-        // Meses vencidos desde o fim do cliff (inclui o 1o mes no instante do cliff)
+        // Months vested since the end of the cliff (includes the 1st month at the moment the cliff ends)
         uint256 elapsed = block.timestamp - foundersFirstReleaseTimestamp;
         uint256 monthsVested = (elapsed / releaseInterval) + 1;
         if (monthsVested > 24) monthsVested = 24;
 
-        // Total que deveria estar liberado até agora (inteiro; lida com restos automaticamente)
+        // Total that should have been released up to now (integer; handles remainders automatically)
         uint256 totalVested = (allocation * monthsVested) / 24;
 
         uint256 claimed = founderClaimed[msg.sender];
-        require(totalVested > claimed, "nothing to claim");
+        require(totalVested > claimed, "Tranquility bestows only what is ready");
         uint256 claimable = totalVested - claimed;
 
-        // Atualiza estado e transfere
+        // Updates state and transfers
         founderClaimed[msg.sender] = claimed + claimable;
         totalFoundersLocked -= claimable;
         _transfer(address(this), msg.sender, claimable);
@@ -331,7 +329,7 @@ contract COINKtoken is ERC20 {
         emit FounderClaim(msg.sender, claimable);
     }
 
-    // get info about Lock befere UnLock
+    // Get info about Lock before UnLock
 
     function getLockInfo(
         address account
@@ -345,40 +343,40 @@ contract COINKtoken is ERC20 {
     }
 
     //----------------------------
-    // Social Project
+    // Social Projects
 
-    // Função para o owner adicionar endereços na SocialWhitelist (debita a reserva 1):
+    // Function for the owner to add addresses to the SocialWhitelist (debited from Reserve 1)
     function addSocialWhitelist(
         address account,
         uint256 amount
     ) external onlyUBQ {
-        require(account != address(0), "account is zero");
-        require(amount > 0, "amount is zero");
+        require(account != address(0), "Purpose cannot flow to emptiness");
+        require(amount > 0, "Modesty appreciates even small offerings");
         require(
             reserves[SOCIAL_RESERVE_ID].amount >= amount,
-            "insufficient reserve Social Projects"
+            "Harmony rejects actions that disrupt this balance"
         );
-        // Move da reserva 1 para a SocialWhitelist (continua dentro do contrato)
+        // Moves from Reserve 1 to the SocialWhitelist (remains within the contract)
         reserves[SOCIAL_RESERVE_ID].amount -= amount;
         totalReserved -= amount;
 
-        socialWhitelist[account] += amount; // permite adicionar várias vezes ao mesmo endereço
+        socialWhitelist[account] += amount; // Allows adding multiple times to the same address
         totalSocialWhitelisted += amount;
 
         emit SocialWhitelistAdded(account, amount);
     }
 
-    //Função de claim para as entidades com projectos sociais autorizados (só após 12 meses):
+    // Claim function for authorized Social Project entities (only after 12 months)
     function claimSocialWhitelist() external {
         require(
             block.timestamp >= socialReleaseTimestamp,
-            "social project founds not released yet"
+            "Serenity prevails; your rewards await their appointed time"
         );
 
         uint256 amount = socialWhitelist[msg.sender];
-        require(amount > 0, "nothing to claim");
+        require(amount > 0, "Jubilee rests until the harvest is ready");
 
-        // Zera antes de transferir
+        // Zeros out before transferring
         socialWhitelist[msg.sender] = 0;
         totalSocialWhitelisted -= amount;
 
@@ -387,24 +385,24 @@ contract COINKtoken is ERC20 {
     }
 
     //--------------------------------
-    // FUNDO DE RESERVA ID 7
+    // RESERVE FUND ID 7
 
-    // Quanto do fundo pode ser levantado agora (0 antes do prazo)
+    // How much of the fund can be withdrawn now (0 before the deadline)
     function reserveFundAvailable() public view returns (uint256) {
         if (block.timestamp < reserveFirstReleaseTimestamp) return 0;
         return reserves[RESERVE_FUND_ID].amount;
     }
 
-    // Levantamento parcial do fundo de reserva (apenas após 48 meses)
+    // Partial withdrawal from the Reserve Fund (only after 48 months)
     function withdrawReserveFund(uint256 amount) external onlyUBQ {
         require(
             block.timestamp >= reserveFirstReleaseTimestamp,
-            "reserve fund locked"
+            "Faith keeps this fund sealed from corrupted hands"
         );
-        require(amount > 0, "amount is zero");
+        require(amount > 0, "Humility reminds: nothing given is still nothing");
         require(
             reserves[FOUNDERS_RESERVE_ID].amount >= amount,
-            "insufficient reserve fund"
+            "Fortitude falters; the Foundersâ€™ trough is empty"
         );
         reserves[RESERVE_FUND_ID].amount -= amount;
         totalReserved -= amount;
@@ -414,35 +412,35 @@ contract COINKtoken is ERC20 {
     }
 
     //------------------------
-    // Movimenta fundos das categorias que não tem condicionamentos ao levantamento
-    // used to pay for services, add tokens to game mechanics, pay to investors etc etc
+    // Moves funds from categories that have no withdrawal restrictions
+    // Used to pay for services, add tokens to game mechanics, pay to investors etc., etc.
     function transferFromReserve(
         uint256 reserveId,
         address to,
         uint256 amount
     ) external onlyUBQ {
-        require(reserveId < RESERVES_COUNT, "invalid reserve id");
-        require(reserveId != FOUNDERS_RESERVE_ID, "invalid reserve id"); // founders have special rules
-        require(reserveId != SOCIAL_RESERVE_ID, "invalid reserve id"); // Social Project have special rules
-        require(reserveId != AIRDROP_RESERVE_ID, "invalid reserve id"); // Community Airdrop have special rules
-        require(reserveId != RESERVE_FUND_ID, "invalid reserve id"); // Reserve Fund have special rules
-        require(to != address(0), "to is zero");
-        require(amount > 0, "amount is zero");
-        require(reserves[reserveId].amount >= amount, "insufficient reserve");
+        require(reserveId < RESERVES_COUNT, "Envy cannot find this pen; it does not exist");
+        require(reserveId != FOUNDERS_RESERVE_ID, "Order denies you standing in this moment"); // Founders have special rules
+        require(reserveId != SOCIAL_RESERVE_ID, "Restraint bars this action before it begins"); // Social Projects hahave special rules
+        require(reserveId != AIRDROP_RESERVE_ID, "Chastity is protected; hands off"); // Community Airdrop has special rules
+        require(reserveId != RESERVE_FUND_ID, "Faith guards the Reserve; intruders denied"); // Reserve Fund has special rules
+        require(to != address(0), "Sagacity cannot steer a phantom path");
+        require(amount > 0, "Generosity cannot flow from emptiness");
+        require(reserves[reserveId].amount >= amount, "Contentment denies what cannot rightly be yours");
 
-        // Debita a reserva e atualiza totalReserved
+        // Debits the reservation and updates totalReserved
         reserves[reserveId].amount -= amount;
         totalReserved -= amount;
 
-        // Transfere tokens do contrato para o destinatario
+        // Transfers tokens from the contract to the recipient
         _transfer(address(this), to, amount);
         emit TransferFromReserve(to, amount);
     }
 
     //--------------------------------
-    // excedentes
+    // Excesses
 
-    // Calcula o excedente de tokens no contrato acima do total bloqueado (reservas + whitelist)
+    // Calculates the surplus tokens in the contract above the total locked (Reserves + Whitelist)
     function excessBalance() public view returns (uint256) {
         uint256 bal = balanceOf(address(this));
         uint256 locked = totalReserved +
@@ -453,61 +451,61 @@ contract COINKtoken is ERC20 {
         else return 0;
     }
 
-    // UBQ pode levantar o excedente
+    // UBQ can withdraw the surplus
     function withdrawExcess() external onlyUBQ {
         uint256 excess = excessBalance();
-        require(excess > 0, "no excess");
+        require(excess > 0, "Temperance finds no surplus to claim");
         _transfer(address(this), msg.sender, excess);
     }
 
-    // Função receive para rejeitar qualquer envio de POL diretamente para o contrato
+    // Receive function to reject any POL sent directly to the contract
     receive() external payable {
-        revert("sending POL to the contract is not allowed");
+        revert("Sobriety forbids reckless POL offerings at this gate");
     }
 
-    // Função fallback como segurança adicional para lidar com chamadas não esperadas
-    // evitamos receber POL neste contrato
+    // Fallback function as an additional safety measure to handle unexpected calls
+    // We prevent receiving POL in this contract
     fallback() external payable {
-        revert("the call is not allowed");
+        revert("Diligence rejects the unfocused call");
     }
 
     function releaseERC20Tokens(address _tokenId) public onlyUBQ {
-        // avoid stuck tokens in the contract
+        // Avoid stuck tokens in the contract
 
-        require(address(this) != _tokenId, "only other Tokens!");
+        require(address(this) != _tokenId, "Gluttony denied: COINK cannot consume itself");
 
         IERC20 anyTokenContract = IERC20(_tokenId);
         uint256 balance = anyTokenContract.balanceOf(address(this));
 
-        require(balance > 0, "balance is zero");
+        require(balance > 0, "Intent cannot awaken what is not yet ready");
 
         anyTokenContract.transfer(msg.sender, balance);
     }
 
     function releasePOL() public onlyUBQ {
-        // avoid stuck POL in the contract
+        // Avoid stuck POL in the contract
 
         uint256 balance = address(this).balance;
-        require(balance > 0, "balance is zero");
+        require(balance > 0, "Virtueâ€™s barn is empty; no COINK to harvest");
 
         (bool ok, ) = msg.sender.call{value: balance}("");
-        require(ok, "native transfer failed");
+        require(ok, "Sloth leaves the offering unmade");
     }
 
     //------------------------
-    // Porco Assado
+    // Roast Pork
     function burnCoink(uint256 reserveId, uint256 amount) external onlyUBQ {
-        require(reserveId < RESERVES_COUNT, "invalid reserve id");
-        require(reserveId != FOUNDERS_RESERVE_ID, "invalid reserve id"); // founders have special rules
-        require(reserveId != SOCIAL_RESERVE_ID, "invalid reserve id"); // Social Project have special rules
-        require(amount > 0, "amount is zero");
-        require(reserves[reserveId].amount >= amount, "insufficient reserve");
+        require(reserveId < RESERVES_COUNT, "Covet cannot locate this pen for burning");
+        require(reserveId != FOUNDERS_RESERVE_ID, "Justice forbids altering what is sacred"); // Founders have special rules
+        require(reserveId != SOCIAL_RESERVE_ID, "Will refuses to bend to unauthorized intent"); // Social Project has special rules
+        require(amount > 0, "Desire must wait: nothing to act upon");
+        require(reserves[reserveId].amount >= amount, "Avarice blocks this attempt: the reserve is too small");
 
-        // Debita a reserva e atualiza totalReserved
+        // Debits the reservation and updates totalReserved
         reserves[reserveId].amount -= amount;
         totalReserved -= amount;
 
-        // Burn the COINK /
+        // Burn the COINK
         _burn(address(this), amount);
 
         emit BurnCoink(address(this), amount);
