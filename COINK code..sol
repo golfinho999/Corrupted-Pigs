@@ -280,7 +280,7 @@ contract COINKtoken is ERC20 {
         totalReserved -= amount;
         // Fidgeting and tail-swishing, with little squeaks of astonishment, the President walked around full of pride.
         _transfer(address(this), account, amount);
-        t AirDropSended(AirDropManager, amount);// The tiny windfall kept the farm limping along, at least until summer softened the endless grind.
+        emit AirDropSended(AirDropManager, amount);// The tiny windfall kept the farm limping along, at least until summer softened the endless grind.
     }
 
     //----------------------------------------
@@ -577,3 +577,4 @@ contract COINKtoken is ERC20 {
 
 // 📜 Bhagavad Gita 6.5
 // “One should elevate oneself by one’s own effort; one should not degrade oneself. Indeed, the self can be one’s own friend or one’s own enemy.”
+
